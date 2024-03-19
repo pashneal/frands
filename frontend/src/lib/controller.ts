@@ -4,19 +4,26 @@ import type { Position } from '$lib/types.ts';
 
 
 export type ValidationMessage = {
-  reason : string,
+  message : string,
   valid : boolean,
 }
 
+export type BoardProperties = {
+  selections : Array<boolean>,
+  connectors : Connections,
+  shells : Array<boolean>,
+  letters : Array<string>,
+}
 
 export class Controller {
   private chains : Array<Chain> = [];
   private doubleClick : boolean = false;
+  private latestMessage : ValidationMessage = {message: "", valid: false};
 
   public constructor() {
   }
 
-  public interact(arrayIndex : number) {
+  public interact(arrayIndex : number,  boardProperties : BoardProperties) {
     let pos = indexToPosition(arrayIndex);
     this.doubleClick = false;
     if (this.chains.length === 0) {
@@ -34,9 +41,23 @@ export class Controller {
     }
     chain.addPosition(pos);
 
+    this.updateSelections(boardProperties.selections);
+    this.updateConnectors(boardProperties.connectors);
+    this.updateShells(boardProperties.shells);
+
+    if (this.newPhraseCheck()) {
+      this.latestMessage = this.validateLatestChain(boardProperties.letters);
+      this.clearLatestChain(boardProperties);
+    } else {
+      this.latestMessage = {message: "", valid: false};
+    }
   }
 
-  public updateConnectors( connectors : Connections) {
+  public getLatestMessage() : ValidationMessage {
+    return this.latestMessage;
+  }
+
+  private updateConnectors( connectors : Connections) {
     connectors.fill(null);
 
     for (let chain of this.chains) {
@@ -47,7 +68,7 @@ export class Controller {
     }
   }
 
-  public updateSelections( selections : Array<boolean> ) {
+  private updateSelections( selections : Array<boolean> ) {
     selections.fill(false);
 
     for (let chain of this.chains) {
@@ -58,7 +79,7 @@ export class Controller {
     }
   }
 
-  public updateShells( shells : Array<boolean> ) {
+  private updateShells( shells : Array<boolean> ) {
     shells.fill(false);
 
     for (let chain of this.chains) {
@@ -84,18 +105,19 @@ export class Controller {
   public validateLatestChain( letters : Array<string>) : ValidationMessage {
     let latestChain = this.chains[this.chains.length - 1];
     if (latestChain === undefined) {
-      return {reason: "Nothing selected", valid: false};
+      return {message: "Nothing selected", valid: false};
     }
 
     let phrase = latestChain.constructPhraseFrom(letters);
-    if (phrase.length < 3) {
-      return {reason: "Too short", valid: false};
+    if (phrase.length <= 3) {
+      return {message: "Too short", valid: false};
     }
 
-    return {reason: "Dictionary Checking Not Implemented Yet", valid: false};
+    return {message: "no dictionary yet", valid: false};
   }
 
-  public clearLatestChain(selections : Array<boolean>, connectors : Connections, shells : Array<boolean>) {
+  public clearLatestChain(boardProperties : BoardProperties) {
+
     let latestChain = this.chains[this.chains.length - 1];
     this.doubleClick = false;
 
@@ -104,16 +126,16 @@ export class Controller {
     }
     for (let pos of latestChain.getSelections()) {
       let index = positionToIndex(pos);
-      selections[index] = false;
+      boardProperties.selections[index] = false;
     }
     for (let [pos, _] of latestChain.getConnectors()) {
       let index = positionToIndex(pos);
-      connectors[index] = null;
+      boardProperties.connectors[index] = null;
     }
     let shellPos = latestChain.getShellPosition();
     if (shellPos !== undefined) {
       let index = positionToIndex(shellPos);
-      shells[index] = false;
+      boardProperties.shells[index] = false;
     }
 
     this.chains.pop();

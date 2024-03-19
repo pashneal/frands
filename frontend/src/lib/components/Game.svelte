@@ -2,8 +2,8 @@
   import Board from '$lib/components/Board.svelte';
 
   let message = "";
-  function handleCheckPhrase(event : any) {
-    message = event.detail.reason.toUpperCase();
+  function handleMessageUpdate(event : any) {
+    message = event.detail.message.toUpperCase();
   }
 </script>
 
@@ -13,7 +13,7 @@
   </div>
 
   <div class="board">
-    <Board on:checkphrase={handleCheckPhrase}/>
+    <Board on:messageUpdate={handleMessageUpdate}/>
   </div>
 </div>
 

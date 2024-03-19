@@ -10,34 +10,31 @@
 
   let alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   alphabet += alphabet;
-
   $: letters = alphabet.split('');
-
   $: controller = new Controller();
 
 
   const dispatch = createEventDispatcher();
 
   function interact(pos : number) {
-    controller.interact(pos);
-    controller.updateConnectors(connectors);
-    controller.updateSelections(selections);
-    controller.updateShells(shells);
-
     // trick to force reactivity
     connectors = connectors;
     selections = selections;
     shells = shells;
 
-    // Bubble custom events up to parent
-    dispatch('interact', { });
+    // Separate concerns into a controller
+    // which simply updates internal state...
+    let boardProperties = {
+      connectors,
+      selections,
+      shells,
+      letters,
+    };
+    //...via board interactions (e.g. clicking a cell)...
+    controller.interact(pos, boardProperties);
 
-    if (controller.newPhraseCheck()) {
-      dispatch('checkphrase', controller.validateLatestChain(letters));
-      controller.clearLatestChain(selections, connectors, shells);
-    } else {
-      dispatch('checkphrase', { reason: "" , valid: false});
-    }
+    // ...and then dispatches an event to update the message
+    dispatch('messageUpdate', controller.getLatestMessage());
   }
 
 
