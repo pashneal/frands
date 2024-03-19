@@ -30,7 +30,7 @@
   }
   line {
     stroke: red;
-    stroke-width: 20px;
+    stroke-width: 12px;
   }
 </style>
 

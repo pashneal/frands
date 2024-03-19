@@ -1,9 +1,9 @@
 <script>
-  import Board from '$lib/components/Board.svelte';
+  import Game from '$lib/components/Game.svelte';
 </script>
 
 <h1>Frands Puzzle</h1>
 
-<Board />
+<Game />
 
 

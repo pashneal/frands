@@ -37,25 +37,45 @@ export function positionToIndex( pos : Position ) : number {
 
 export class Chain {
   private selections : Array<Position> = [];
-  private directions : Array<[Position, Direction]> = [];
+  private connectors : Array<[Position, Direction]> = [];
+  private finalized : boolean = false;
 
   public constructor() {
   }
 
+  // Add a position to the chain.
+  //
+  // If the position is adjacent to the last position, grow the chain. 
+  // If the position is not adjacent, reset the chain.
+  // If the position already exists in the chain, back up to that position.
   public addPosition(position : [number, number]) {
+    for (let [index, [x,y]] of this.selections.entries()) {
+      if (x === position[0] && y === position[1]) {
+        this.selections = this.selections.slice(0, index + 1);
+        this.connectors = this.connectors.slice(0, index);
+        return;
+      }
+    }
+
     this.selections.push(position);
     const length = this.selections.length;
     if (length > 1) {
-      console.log("Adding direction", this.selections[length - 1]);
       const newIndex = length - 1;
       const lastIndex = length - 2;
       const newPos = this.selections[newIndex];
       const lastPos = this.selections[lastIndex];
       const dir = this.relativeDirection(lastPos, newPos);
-      if (dir !== undefined) {
-        this.directions.push([lastPos, dir])
+      if (dir === undefined) {
+        this.selections = this.selections.slice(length - 1);
+        this.connectors = [];
+      } else {
+        this.connectors.push([lastPos, dir])
       }
     }
+  }
+
+  public lastPosition() : Position | undefined {
+    return this.selections[this.selections.length - 1];
   }
 
   private relativeDirection( first : Position , next : Position ) : Direction | undefined {
@@ -64,10 +84,10 @@ export class Chain {
     return find(directionMap, [dx, dy]);
   }
 
-  public updateDirections( directions : FlatBoard) {
-    for (let [pos, dir] of this.directions) {
+  public updateConnectors( connectors : FlatBoard) {
+    for (let [pos, dir] of this.connectors) {
       let index = positionToIndex(pos);
-      directions[index] = dir;
+      connectors[index] = dir;
     }
   }
 
@@ -76,5 +96,17 @@ export class Chain {
       let index = positionToIndex(pos);
       selections[index] = true;
     }
+  }
+
+  public updateShells( shells : Array<boolean>) {
+    if (this.finalized) {
+      return;
+    }
+    const pos = this.lastPosition();
+    if (pos === undefined) {
+      return;
+    }
+    const index = positionToIndex(pos);
+    shells[index] = true;
   }
 }
