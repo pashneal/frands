@@ -1,13 +1,17 @@
 <script lang="ts">
   import Board from '$lib/components/Board.svelte';
-  $: message = "Nothing";
+
+  let message = "";
+  function checkWord() {
+    message = "";
+  }
 </script>
 
 <div>
   <h1 class="status">{message}</h1>
 
   <div class="board">
-    <Board/>
+    <Board on:checkword={checkWord}/>
   </div>
 </div>
 

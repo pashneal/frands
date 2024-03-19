@@ -84,29 +84,35 @@ export class Chain {
     return find(directionMap, [dx, dy]);
   }
 
-  public updateConnectors( connectors : FlatBoard) {
-    for (let [pos, dir] of this.connectors) {
-      let index = positionToIndex(pos);
-      connectors[index] = dir;
-    }
+  public getSelections() : Array<Position> {
+    // defensively copy the array
+    return this.selections.map(([x,y]) => [x,y]);
   }
 
-  public updateSelections( selections : Array<boolean>) {
+  public getConnectors() : Array<[Position, Direction]> {
+    // defensively copy the array
+    return this.connectors.map(([[x,y], dir]) => [[x,y], dir]);
+  }
+
+  public getShellPosition() : Position | undefined {
+    if (this.finalized) {
+      return undefined;
+    }
+    const length = this.selections.length;
+    if (length === 0) {
+      return undefined;
+    }
+    return this.selections[length - 1];
+  }
+
+
+  public constructPhraseFrom(letters : Array<string> ) : string {
+    let phrase = "";
     for (let pos of this.selections) {
       let index = positionToIndex(pos);
-      selections[index] = true;
+      phrase += letters[index];
     }
+    return phrase;
   }
 
-  public updateShells( shells : Array<boolean>) {
-    if (this.finalized) {
-      return;
-    }
-    const pos = this.lastPosition();
-    if (pos === undefined) {
-      return;
-    }
-    const index = positionToIndex(pos);
-    shells[index] = true;
-  }
 }

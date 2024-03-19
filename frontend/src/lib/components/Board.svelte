@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
   import Cell from './Cell.svelte';
   import { Controller } from '$lib/controller';
 
@@ -10,18 +11,32 @@
   let alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   alphabet += alphabet;
 
+  $: letters = alphabet.split('');
+
   $: controller = new Controller();
 
+
+  const dispatch = createEventDispatcher();
+
   function interact(pos : number) {
-    connectors = Array(48).fill(null);
-    selections = Array(48).fill(false);
-    shells = Array(48).fill(false);
+    console.log("Interacting with cell", pos);
 
     controller.interact(pos);
-
     controller.updateConnectors(connectors);
     controller.updateSelections(selections);
     controller.updateShells(shells);
+
+    // trick to force reactivity
+    connectors = connectors;
+    selections = selections;
+    shells = shells;
+
+    // Bubble custom events up to parent
+    dispatch('interact', { });
+
+    if (controller.newPhraseCheck()) {
+      dispatch('checkWord', controller.validateLatestChain(letters));
+    }
   }
 
 
@@ -30,7 +45,7 @@
 <div class="grid-container">
   {#each board as _, i (`${i}-${connectors[i]}-${selections[i]}-${shells[i]}`)}
     <Cell 
-      value={alphabet[i]} 
+      value={letters[i]} 
       direction={connectors[i]} 
       selected={selections[i]} 
       shell={shells[i]}
