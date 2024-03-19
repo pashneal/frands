@@ -16,15 +16,18 @@ export class Controller {
   public constructor() {
   }
 
-  public interact(arrayPos : number) {
-    let pos = indexToPosition(arrayPos);
+  public interact(arrayIndex : number) {
+    let pos = indexToPosition(arrayIndex);
+    this.doubleClick = false;
     if (this.chains.length === 0) {
       this.chains.push(new Chain());
     }
 
     let chain = this.chains[this.chains.length - 1];
 
-    if (chain.lastPosition() == pos) {
+    let lastPos = chain.lastPosition();
+
+    if (lastPos !== undefined && (lastPos[0] === pos[0] && lastPos[1] === pos[1])) {
       this.doubleClick = true;
     } else {
       this.doubleClick = false;
@@ -89,14 +92,31 @@ export class Controller {
       return {reason: "Too short", valid: false};
     }
 
-    return {reason: "Work in progress", valid: false};
+    return {reason: "Dictionary Checking Not Implemented Yet", valid: false};
   }
 
-  public clearLatestChain(selections : Array<boolean>, connectors : Connections) {
+  public clearLatestChain(selections : Array<boolean>, connectors : Connections, shells : Array<boolean>) {
     let latestChain = this.chains[this.chains.length - 1];
+    this.doubleClick = false;
+
     if (latestChain === undefined) {
       return;
     }
+    for (let pos of latestChain.getSelections()) {
+      let index = positionToIndex(pos);
+      selections[index] = false;
+    }
+    for (let [pos, _] of latestChain.getConnectors()) {
+      let index = positionToIndex(pos);
+      connectors[index] = null;
+    }
+    let shellPos = latestChain.getShellPosition();
+    if (shellPos !== undefined) {
+      let index = positionToIndex(shellPos);
+      shells[index] = false;
+    }
+
+    this.chains.pop();
   }
 
 } 

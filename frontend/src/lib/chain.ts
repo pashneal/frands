@@ -102,7 +102,7 @@ export class Chain {
     if (length === 0) {
       return undefined;
     }
-    return this.selections[length - 1];
+    return this.lastPosition();
   }
 
 

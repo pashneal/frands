@@ -19,8 +19,6 @@
   const dispatch = createEventDispatcher();
 
   function interact(pos : number) {
-    console.log("Interacting with cell", pos);
-
     controller.interact(pos);
     controller.updateConnectors(connectors);
     controller.updateSelections(selections);
@@ -35,7 +33,10 @@
     dispatch('interact', { });
 
     if (controller.newPhraseCheck()) {
-      dispatch('checkWord', controller.validateLatestChain(letters));
+      dispatch('checkphrase', controller.validateLatestChain(letters));
+      controller.clearLatestChain(selections, connectors, shells);
+    } else {
+      dispatch('checkphrase', { reason: "" , valid: false});
     }
   }
 
