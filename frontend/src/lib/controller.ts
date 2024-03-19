@@ -25,13 +25,12 @@ export class Controller {
 
   public interact(arrayIndex : number,  boardProperties : BoardProperties) {
     let pos = indexToPosition(arrayIndex);
-    this.doubleClick = false;
+
     if (this.chains.length === 0) {
       this.chains.push(new Chain());
     }
 
     let chain = this.chains[this.chains.length - 1];
-
     let lastPos = chain.lastPosition();
 
     if (lastPos !== undefined && (lastPos[0] === pos[0] && lastPos[1] === pos[1])) {
@@ -39,6 +38,7 @@ export class Controller {
     } else {
       this.doubleClick = false;
     }
+
     chain.addPosition(pos);
 
     this.updateSelections(boardProperties.selections);
@@ -47,7 +47,13 @@ export class Controller {
 
     if (this.newPhraseCheck()) {
       this.latestMessage = this.validateLatestChain(boardProperties.letters);
-      this.clearLatestChain(boardProperties);
+      if (this.latestMessage.valid) {
+        this.finalizeLatestChain();
+        this.chains.push(new Chain());
+        this.updateShells(boardProperties.shells);
+      } else {
+        this.clearLatestChain(boardProperties);
+      }
     } else {
       this.latestMessage = {message: "", valid: false};
     }
@@ -113,7 +119,10 @@ export class Controller {
       return {message: "Too short", valid: false};
     }
 
-    return {message: "no dictionary yet", valid: false};
+    const validationMessage =  {message: "Correct!", valid: true};
+    // TODO: check if phrase is *actually* in the dictionary
+    return validationMessage;
+
   }
 
   public clearLatestChain(boardProperties : BoardProperties) {
@@ -139,6 +148,14 @@ export class Controller {
     }
 
     this.chains.pop();
+  }
+
+  public finalizeLatestChain() {
+    let latestChain = this.chains[this.chains.length - 1];
+    if (latestChain === undefined) {
+      return;
+    }
+    latestChain.finalize();
   }
 
 } 

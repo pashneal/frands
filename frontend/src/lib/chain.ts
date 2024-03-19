@@ -115,4 +115,8 @@ export class Chain {
     return phrase;
   }
 
+  public finalize() {
+    this.finalized = true;
+  }
+
 }
