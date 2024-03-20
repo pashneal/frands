@@ -27,22 +27,18 @@ export class ChainsController {
     }
 
     chain.addPosition(pos);
-
-    this.updateSelectionColors(boardProperties.colors);
-    this.updateConnectors(boardProperties.connectors);
-    this.updateShells(boardProperties.shells);
+    this.updateBoard(boardProperties);
 
     if (this.newPhraseCheck()) {
       this.latestMessage = this.validateLatestChain(boardProperties.letters);
 
       if (this.latestMessage.valid) {
+        // Finalize the chain visually and start a new one
         this.finalizeLatestChain();
         this.chains.push(new Chain());
-        // Force board to update
-        this.updateShells(boardProperties.shells);
-        this.updateConnectors(boardProperties.connectors);
-        this.updateSelectionColors(boardProperties.colors);
+        this.updateBoard(boardProperties);
       } else {
+        // Reset the chain
         this.clearLatestChain(boardProperties);
         this.chains.push(new Chain());
       }
@@ -126,6 +122,14 @@ export class ChainsController {
 
   }
 
+  // Visually update board properties to reflect current
+  // state of chains
+  private updateBoard( boardProperties : BoardProperties) {
+    this.updateSelectionColors(boardProperties.colors);
+    this.updateConnectors(boardProperties.connectors);
+    this.updateShells(boardProperties.shells);
+  }
+
   public clearLatestChain(boardProperties : BoardProperties) {
 
     let latestChain = this.chains[this.chains.length - 1];
@@ -147,7 +151,6 @@ export class ChainsController {
       let index = positionToIndex(shellPos);
       boardProperties.shells[index] = false;
     }
-
 
     // Remove all non-finalized chains
     this.chains = this.chains.filter((chain) => chain.is_finalized());
