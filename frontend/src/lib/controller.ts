@@ -1,21 +1,8 @@
 import { indexToPosition, positionToIndex, Chain } from './chain';
-import type { FlatBoard as Connections } from '$lib/types.ts';
-import type { Position } from '$lib/types.ts';
+import type { Connections, ValidationMessage, BoardProperties } from '$lib/types';
+import { Color } from '$lib/types';
 
-
-export type ValidationMessage = {
-  message : string,
-  valid : boolean,
-}
-
-export type BoardProperties = {
-  selections : Array<boolean>,
-  connectors : Connections,
-  shells : Array<boolean>,
-  letters : Array<string>,
-}
-
-export class Controller {
+export class ChainsController {
   private chains : Array<Chain> = [];
   private doubleClick : boolean = false;
   private latestMessage : ValidationMessage = {message: "", valid: false};
@@ -41,18 +28,23 @@ export class Controller {
 
     chain.addPosition(pos);
 
-    this.updateSelections(boardProperties.selections);
+    this.updateSelectionColors(boardProperties.colors);
     this.updateConnectors(boardProperties.connectors);
     this.updateShells(boardProperties.shells);
 
     if (this.newPhraseCheck()) {
       this.latestMessage = this.validateLatestChain(boardProperties.letters);
+
       if (this.latestMessage.valid) {
         this.finalizeLatestChain();
         this.chains.push(new Chain());
+        // Force board to update
         this.updateShells(boardProperties.shells);
+        this.updateConnectors(boardProperties.connectors);
+        this.updateSelectionColors(boardProperties.colors);
       } else {
         this.clearLatestChain(boardProperties);
+        this.chains.push(new Chain());
       }
     } else {
       this.latestMessage = {message: "", valid: false};
@@ -74,15 +66,24 @@ export class Controller {
     }
   }
 
-  private updateSelections( selections : Array<boolean> ) {
-    selections.fill(false);
+  private updateSelectionColors( colors : Array<Color> ) {
+    colors.fill(Color.None);
 
     for (let chain of this.chains) {
       for (let pos of chain.getSelections()) {
         let index = positionToIndex(pos);
-        selections[index] = true;
+        colors[index] = Color.Primary;
       }
     }
+
+    let latestChain = this.chains[this.chains.length - 1];
+    if (latestChain !== undefined) {
+      for (let pos of latestChain.getSelections()) {
+        let index = positionToIndex(pos);
+        colors[index] = Color.Secondary;
+      }
+    }
+
   }
 
   private updateShells( shells : Array<boolean> ) {
@@ -135,7 +136,7 @@ export class Controller {
     }
     for (let pos of latestChain.getSelections()) {
       let index = positionToIndex(pos);
-      boardProperties.selections[index] = false;
+      boardProperties.colors[index] = Color.None;
     }
     for (let [pos, _] of latestChain.getConnectors()) {
       let index = positionToIndex(pos);
@@ -147,13 +148,15 @@ export class Controller {
       boardProperties.shells[index] = false;
     }
 
-    this.chains.pop();
+
+    // Remove all non-finalized chains
+    this.chains = this.chains.filter((chain) => chain.is_finalized());
   }
 
   public finalizeLatestChain() {
     let latestChain = this.chains[this.chains.length - 1];
     if (latestChain === undefined) {
-      return;
+      throw new Error("No chain to finalize!");
     }
     latestChain.finalize();
   }

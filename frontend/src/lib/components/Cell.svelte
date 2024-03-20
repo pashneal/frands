@@ -1,21 +1,31 @@
 <script lang="ts">
   import Connector from "./Connector.svelte"; 
   import type { Direction } from "$lib/types";
+  import { Color } from "$lib/types";
 
   export let value;
   export let direction : Direction | null = null;
-  export let selected : boolean = false;
+  export let color : Color  = Color.None;
   export let shell : boolean = false;
+
+  function colorString(c :  Color) {
+    if (c === Color.None) { return "" }
+    if (c === Color.Primary) { return "primary"}
+    if (c === Color.Secondary) { return "secondary"}
+    return "";
+  }
+
+  
 </script>
 
 <div>
   {#if direction !== null}
-      <Connector direction={direction} />
+      <Connector direction={direction} color={colorString(color)} />
   {/if}
 
   <button on:click>
     <div class="{shell ? 'shell' : ""}">
-        <div class="grid-item {selected ? 'selected' : ''}">{value}</div>
+        <div class="grid-item {colorString(color)}">{value}</div>
     </div>
   </button>
 </div>
@@ -42,16 +52,21 @@
     align-items: center;
   }
 
-  .selected {
+  .primary {
     border-radius: 50%;
     background-color: red;
+  }
+
+  .secondary {
+    border-radius: 50%;
+    background-color: blue;
   }
 
   .shell {
     border-radius: 50%;
     width: 2em;
     height: 2em;
-    outline: 3px solid red;
+    outline: 3px solid blue;
 
     gap : 1em;
   }

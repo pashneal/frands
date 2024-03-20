@@ -1,4 +1,4 @@
-import type { Direction, FlatBoard, Position } from "$lib/types";
+import type { Direction, Connections, Position } from "$lib/types";
 
 const BOARD_WIDTH = 6;
 const BOARD_HEIGHT = 8;
@@ -117,6 +117,10 @@ export class Chain {
 
   public finalize() {
     this.finalized = true;
+  }
+
+  public is_finalized() : boolean {
+    return this.finalized;
   }
 
 }

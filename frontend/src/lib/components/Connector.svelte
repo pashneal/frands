@@ -1,8 +1,9 @@
 <script lang="ts">
   export let direction : "E" | "W" | "N" | "S" | "NE" | "NW" | "SE" | "SW";
+  export let color: "primary" | "secondary" | "";
 </script>
 
-<svg>
+<svg class="{color}">
   {#if direction === "E"}
       <line x1="50%" y1="50%" x2="90%" y2="50%" />
   {:else if direction === "W"}
@@ -29,8 +30,13 @@
     position: absolute;
   }
   line {
-    stroke: red;
     stroke-width: 12px;
+  }
+  .primary {
+    stroke: red;
+  }
+  .secondary {
+    stroke: blue;
   }
 </style>
 
