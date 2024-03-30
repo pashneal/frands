@@ -1,4 +1,5 @@
 import type { Direction, Connections, Position } from "$lib/types";
+import { moved_blob_ids } from "$lib/transitions";
 
 const BOARD_WIDTH = 6;
 const BOARD_HEIGHT = 8;
@@ -49,6 +50,10 @@ export class Chain {
   // If the position is not adjacent, reset the chain.
   // If the position already exists in the chain, back up to that position.
   public addPosition(position : [number, number]) {
+    if (this.finalized) {
+      throw new Error("Cannot add to a finalized chain");
+    }
+
     for (let [index, [x,y]] of this.selections.entries()) {
       if (x === position[0] && y === position[1]) {
         this.selections = this.selections.slice(0, index + 1);
@@ -117,6 +122,9 @@ export class Chain {
 
   public finalize() {
     this.finalized = true;
+    moved_blob_ids.update( (ids) => (
+      ids.concat(this.selections.map(positionToIndex))
+    ))
   }
 
   public is_finalized() : boolean {

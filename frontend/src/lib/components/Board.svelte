@@ -5,7 +5,7 @@
   import { Color } from '$lib/types';
 
   export let board = Array(48).fill(0);
-  $: connectors = Array(48).fill(null);
+  $: connectors = Array(48).fill(0).map(() => []);
   $: colors = Array(48).fill(Color.None);
   $: shells = Array(48).fill(false);
 
@@ -23,8 +23,7 @@
     colors = colors;
     shells = shells;
 
-    // Separate concerns into a controller
-    // which simply updates internal state...
+    // update ChainsController internal state...
     let boardProperties = {
       connectors,
       colors,
@@ -45,9 +44,10 @@
   {#each board as _, i (`${i}-${connectors[i]}-${colors[i]}-${shells[i]}`)}
     <Cell 
       value={letters[i]} 
-      direction={connectors[i]} 
+      connectors={connectors[i]} 
       color={colors[i]} 
       shell={shells[i]}
+      id={i}
     on:click={() => interact(i)}/>
   {/each}
 </div>

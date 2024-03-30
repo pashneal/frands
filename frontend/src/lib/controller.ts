@@ -1,5 +1,5 @@
 import { indexToPosition, positionToIndex, Chain } from './chain';
-import type { Connections, ValidationMessage, BoardProperties } from '$lib/types';
+import type { Connections, ValidationMessage, BoardProperties, Direction} from '$lib/types';
 import { Color } from '$lib/types';
 
 export class ChainsController {
@@ -38,9 +38,9 @@ export class ChainsController {
         this.chains.push(new Chain());
         this.updateBoard(boardProperties);
       } else {
-        // Reset the chain
-        this.clearLatestChain(boardProperties);
+        this.removeLatestChain();
         this.chains.push(new Chain());
+        this.updateBoard(boardProperties);
       }
     } else {
       this.latestMessage = {message: "", valid: false};
@@ -52,14 +52,25 @@ export class ChainsController {
   }
 
   private updateConnectors( connectors : Connections) {
-    connectors.fill(null);
+    connectors.forEach((_, index) => connectors[index] = []);
 
     for (let chain of this.chains) {
       for (let [pos, dir] of chain.getConnectors()) {
         let index = positionToIndex(pos);
-        connectors[index] = dir;
+        connectors[index].push([dir as Direction, Color.Primary]);
       }
     }
+
+    // Add the latest chain's connectors
+    const latestChain = this.chains[this.chains.length - 1];
+
+    if (latestChain !== undefined) {
+      for (let [pos, dir] of latestChain.getConnectors()) {
+        let index = positionToIndex(pos);
+        connectors[index].push([dir as Direction, Color.Secondary]);
+      }
+    }
+
   }
 
   private updateSelectionColors( colors : Array<Color> ) {
@@ -130,7 +141,7 @@ export class ChainsController {
     this.updateShells(boardProperties.shells);
   }
 
-  public clearLatestChain(boardProperties : BoardProperties) {
+  public removeLatestChain() {
 
     let latestChain = this.chains[this.chains.length - 1];
     this.doubleClick = false;
@@ -138,20 +149,6 @@ export class ChainsController {
     if (latestChain === undefined) {
       return;
     }
-    for (let pos of latestChain.getSelections()) {
-      let index = positionToIndex(pos);
-      boardProperties.colors[index] = Color.None;
-    }
-    for (let [pos, _] of latestChain.getConnectors()) {
-      let index = positionToIndex(pos);
-      boardProperties.connectors[index] = null;
-    }
-    let shellPos = latestChain.getShellPosition();
-    if (shellPos !== undefined) {
-      let index = positionToIndex(shellPos);
-      boardProperties.shells[index] = false;
-    }
-
     // Remove all non-finalized chains
     this.chains = this.chains.filter((chain) => chain.is_finalized());
   }

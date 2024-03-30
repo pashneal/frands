@@ -1,6 +1,6 @@
 export type Direction = "E" | "W" | "N" | "S" | "NE" | "NW" | "SW" | "SE";
 export type Position = [number, number]
-export type Connections = Array<Direction | null >;
+export type Connections = Array<Array<[Direction, Color]>>;
 export enum Color {
   Primary = 0,
   Secondary,

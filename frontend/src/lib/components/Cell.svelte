@@ -1,31 +1,30 @@
 <script lang="ts">
-  import Connector from "./Connector.svelte"; 
   import type { Direction } from "$lib/types";
   import { Color } from "$lib/types";
+  import { colorString } from "$lib/utils";
+  import { send , receive, moved_blob_ids} from "$lib/transitions";
+
+  import Connector from "./Connector.svelte"; 
 
   export let value;
-  export let direction : Direction | null = null;
+  export let connectors : Array<[Direction, Color]> = [];
   export let color : Color  = Color.None;
   export let shell : boolean = false;
+  export let id : number;
 
-  function colorString(c :  Color) {
-    if (c === Color.None) { return "" }
-    if (c === Color.Primary) { return "primary"}
-    if (c === Color.Secondary) { return "secondary"}
-    return "";
-  }
-
-  
 </script>
 
 <div>
-  {#if direction !== null}
-      <Connector direction={direction} color={colorString(color)} />
-  {/if}
+  {#each connectors as [direction, color]}
+    <Connector direction={direction} color={colorString(color)}/>
+  {/each}
 
   <button on:click>
     <div class="{shell ? 'shell' : ""}">
         <div class="grid-item {colorString(color)}">{value}</div>
+        {#if color !== Color.None && !$moved_blob_ids.includes(id)}
+            <div class="blob {colorString(Color.Primary)}" out:send="{{key:id}}"></div>
+        {/if}
     </div>
   </button>
 </div>
@@ -50,6 +49,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .primary {
@@ -70,4 +71,12 @@
 
     gap : 1em;
   }
+
+  .blob {
+    position: absolute;
+    z-index: 3;
+    width : 1.7em;
+    height: 1.7em;
+  }
+
 </style>
